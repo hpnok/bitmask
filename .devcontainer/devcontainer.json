@@ -1,0 +1,13 @@
+
+{
+	"image": "mcr.microsoft.com/devcontainers/dotnet:latest",
+	"customizations": {
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-dotnettools.csdevkit",
+				"ms-vscode.hexeditor"
+			]
+		}
+	}
+}
