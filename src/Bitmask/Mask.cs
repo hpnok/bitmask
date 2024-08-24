@@ -146,9 +146,10 @@ namespace Bitmask
                             long nextStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP) - 1;
                             ulong mask = (2uL << (int)(x & (long)BLOCK_MODULO)) - (1uL << (int)(targetX & (long)BLOCK_MODULO));  // mask [targetX, x]
                             ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
-                            int firstSetBitFromRight = 1 + BitOperations.LeadingZeroCount(maskedStrip);
-                            if (firstSetBitFromRight != BITS_PER_STRIP)
+                            int emptyBits = BitOperations.LeadingZeroCount(maskedStrip);
+                            if (emptyBits != BITS_PER_STRIP)
                             {
+                                int firstSetBitFromRight = 1 + emptyBits;
                                 x = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (BITS_PER_STRIP - firstSetBitFromRight);
                                 return new Tuple<int, int>((int)x, (int)y);
                             }

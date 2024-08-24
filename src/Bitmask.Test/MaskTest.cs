@@ -99,6 +99,7 @@ namespace Bitmask.Test
 
         [Theory]
         [InlineData(-200, 50, 200, 50)]
+        [InlineData(400, 50, -200, 50)]
         [InlineData(50, 200, 50, -200)]
         [InlineData(0, 0, 200, 100)]
         [InlineData(0, 400, 100, -100)]
