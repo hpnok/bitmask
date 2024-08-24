@@ -97,6 +97,20 @@ namespace Bitmask.Test
             overlaps.Should().BeEquivalentTo(new Tuple<int, int>(expectedX, expectedY));
         }
 
+        [Theory]
+        [InlineData(-200, 50, 200, 50)]
+        [InlineData(50, 200, 50, -200)]
+        [InlineData(0, 0, 200, 100)]
+        [InlineData(0, 400, 100, -100)]
+        public void RayDoesNotIntersectEmptyMask(int startX, int startY, int endX, int endY)
+        {
+            var mask = new Mask(160, 160);
+
+            var overlaps = mask.OverlapsRay(startX, startY, endX, endY);
+
+            overlaps.Should().BeNull();
+        }
+
         private static Mask BoxMask(int width, int height)
         {
             var mask = new Mask(width, height);

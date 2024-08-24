@@ -120,102 +120,47 @@ namespace Bitmask
                 }
                 else if (dy == 0)
                 {
-                    ulong y = (ulong)startY;
-                    ulong x = (ulong)Math.Clamp(startX, 0, W - 1);
-                    ulong targetX = (ulong)Math.Clamp(endX, 0, W - 1);
+                    long y = startY;
+                    long x = Math.Clamp(startX, 0, W - 1);
+                    long targetX = Math.Clamp(endX, 0, W - 1);
                     if (dx > 0)
                     {
-                        bool targetIsNotInSameStrip = (x / BITS_PER_STRIP) < (targetX / BITS_PER_STRIP);
-                        bool collisionInFirstStrip = (bits[H * (x / BITS_PER_STRIP) + y] >> (int)(x & BLOCK_MODULO)) != 0;
-                        if (collisionInFirstStrip)
+                        while (x <= targetX)
                         {
-                            if (targetIsNotInSameStrip)
+                            long nextStrip = (1 + x / BITS_PER_STRIP) * BITS_PER_STRIP;
+                            ulong mask = (2uL << (int)(targetX & (long)BLOCK_MODULO)) - (1uL << (int)(x & (long)BLOCK_MODULO));  // mask [x, targetX]
+                            ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
+                            int unsetBits = BitOperations.TrailingZeroCount(maskedStrip);
+                            if (unsetBits != BITS_PER_STRIP)
                             {
-                                ulong lastXOfCurrentStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (BITS_PER_STRIP - 1);
-                                targetX = lastXOfCurrentStrip;
+                                x = BITS_PER_STRIP * (x / BITS_PER_STRIP) + unsetBits;
+                                return new Tuple<int, int>((int)x, (int)y);
                             }
+                            x = nextStrip;
                         }
-                        else if (targetIsNotInSameStrip)
-                        {
-                            ulong nextStripStart = (1 + x / BITS_PER_STRIP) * BITS_PER_STRIP;
-                            x = nextStripStart;
-                            targetIsNotInSameStrip = (x / BITS_PER_STRIP) < (targetX / BITS_PER_STRIP);
-                            while (targetIsNotInSameStrip)
-                            {
-                                bool stripIsNotEmpty = bits[H * (x / BITS_PER_STRIP) + y] != 0;
-                                if (stripIsNotEmpty)
-                                {
-                                    ulong lastXOfCurrentStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (BITS_PER_STRIP - 1);
-                                    targetX = lastXOfCurrentStrip;
-                                    break;
-                                }
-                                x += BITS_PER_STRIP;
-                                targetIsNotInSameStrip = (x / BITS_PER_STRIP) < (targetX / BITS_PER_STRIP);
-                            }
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                        ulong mask = (2uL << (int)(targetX & BLOCK_MODULO)) - (1uL << (int)(x & BLOCK_MODULO));  // mask [x, targetX]
-                        ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
-                        if (maskedStrip != 0)
-                        {
-                            x = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (ulong)BitOperations.TrailingZeroCount(maskedStrip);
-                            return new Tuple<int, int>((int)x, (int)y);
-                        }
-
                     }
                     else
                     {
-                        int bitsToTheLeft = (int)((BITS_PER_STRIP - 1) - x & BLOCK_MODULO);
-                        bool collisionInFirstStrip = (bits[H * (x / BITS_PER_STRIP) + y] << bitsToTheLeft) != 0;
-                        bool targetIsNotInSameStrip = (x / BITS_PER_STRIP) != (targetX / BITS_PER_STRIP);
-                        if (collisionInFirstStrip)
+                        while (x >= targetX)
                         {
-                            if (targetIsNotInSameStrip)
+                            long nextStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP) - 1;
+                            ulong mask = (2uL << (int)(x & (long)BLOCK_MODULO)) - (1uL << (int)(targetX & (long)BLOCK_MODULO));  // mask [targetX, x]
+                            ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
+                            int firstSetBitFromRight = 1 + BitOperations.LeadingZeroCount(maskedStrip);
+                            if (firstSetBitFromRight != BITS_PER_STRIP)
                             {
-                                ulong firstXOfCurrentStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP);
-                                targetX = firstXOfCurrentStrip;
+                                x = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (BITS_PER_STRIP - firstSetBitFromRight);
+                                return new Tuple<int, int>((int)x, (int)y);
                             }
-                        }
-                        else if (targetIsNotInSameStrip)
-                        {
-                            ulong nextStripLastX = BITS_PER_STRIP*(x / BITS_PER_STRIP) - 1;
-                            x = nextStripLastX;
-                            targetIsNotInSameStrip = (x / BITS_PER_STRIP) != (targetX / BITS_PER_STRIP);
-                            while (targetIsNotInSameStrip)
-                            {
-                                bool stripIsNotEmpty = bits[H * (x / BITS_PER_STRIP) + y] != 0;
-                                if (stripIsNotEmpty)
-                                {
-                                    ulong firstXOfCurrentStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP);
-                                    targetX = firstXOfCurrentStrip;
-                                    break;
-                                }
-                                x -= BITS_PER_STRIP;
-                                targetIsNotInSameStrip = (x / BITS_PER_STRIP) != (targetX / BITS_PER_STRIP);
-                            }
-                        }
-                        else 
-                        {
-                            return null;
-                        }
-                        ulong mask = (2uL << (int)(x & BLOCK_MODULO)) - (1uL << (int)(targetX & BLOCK_MODULO));  // mask [targetX, x]
-                        ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
-                        if (maskedStrip != 0)
-                        {
-                            ulong firstSetBitFromRight = 1uL + (ulong)BitOperations.LeadingZeroCount(maskedStrip);
-                            x = BITS_PER_STRIP * (x / BITS_PER_STRIP) + (BITS_PER_STRIP - firstSetBitFromRight);
-                            return new Tuple<int, int>((int)x, (int)y);
+                            x = nextStrip;
                         }
                     }
                 }
                 else if (Math.Abs(dx) >= Math.Abs(dy))  // for each x value there's only one f(x)=y value
                 {
-                    double slope = dy / (double)dx;  // y(x) = s*(x - x0) + initialY
-                    var initialY = startY + Math.Round(slope*(0-startX));
-                    var finalY = startY + Math.Round(slope*(W - 1 - startX));
+                    double slope = dy / (double)dx;  // y(x) = s*(x - startX) + startY
+                    var initialY = startY + (int)Math.Round(slope * (0 - startX));
+                    var finalY = startY + (int)Math.Round(slope * (W - 1 - startX));
                     if ((initialY < 0 && finalY < 0) || (initialY >= H && finalY >= H))
                     {
                         return null;
@@ -234,9 +179,9 @@ namespace Bitmask
                 }
                 else
                 {
-                    double slope = dx / (double)dy;  // x(y) = s*(y - y0) + initialX
-                    var initialX = (ulong)(startX + Math.Round(slope*(0-startY)));
-                    var finalX = (ulong)(startX + Math.Round(slope*(H - 1 - startY)));
+                    double slope = dx / (double)dy;  // x(y) = s*(y - startY) + startX
+                    var initialX = startX + (int)Math.Round(slope * (0 - startY));
+                    var finalX = startX + (int)Math.Round(slope * (H - 1 - startY));
                     if ((initialX < 0 && finalX < 0) || (initialX >= W && finalX >= W))
                     {
                         return null;
