@@ -128,7 +128,8 @@ namespace Bitmask
                         while (x <= targetX)
                         {
                             long nextStrip = (1 + x / BITS_PER_STRIP) * BITS_PER_STRIP;
-                            ulong mask = (2uL << (int)(targetX & (long)BLOCK_MODULO)) - (1uL << (int)(x & (long)BLOCK_MODULO));  // mask [x, targetX]
+                            long stripEnd = Math.Min(nextStrip - 1, targetX);
+                            ulong mask = (2uL << (int)(stripEnd & (long)BLOCK_MODULO)) - (1uL << (int)(x & (long)BLOCK_MODULO));  // mask [x, targetX]
                             ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
                             int unsetBits = BitOperations.TrailingZeroCount(maskedStrip);
                             if (unsetBits != BITS_PER_STRIP)
@@ -144,7 +145,8 @@ namespace Bitmask
                         while (x >= targetX)
                         {
                             long nextStrip = BITS_PER_STRIP * (x / BITS_PER_STRIP) - 1;
-                            ulong mask = (2uL << (int)(x & (long)BLOCK_MODULO)) - (1uL << (int)(targetX & (long)BLOCK_MODULO));  // mask [targetX, x]
+                            long stripEnd = Math.Max(nextStrip + 1, targetX);
+                            ulong mask = (2uL << (int)(x & (long)BLOCK_MODULO)) - (1uL << (int)(stripEnd & (long)BLOCK_MODULO));  // mask [targetX, x]
                             ulong maskedStrip = bits[H * (x / BITS_PER_STRIP) + y] & mask;
                             int emptyBits = BitOperations.LeadingZeroCount(maskedStrip);
                             if (emptyBits != BITS_PER_STRIP)

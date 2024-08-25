@@ -74,7 +74,9 @@ namespace Bitmask.Test
             mask.Fill();
 
             var overlaps = mask.OverlapsRay(startX, startY, endX, endY);
+            var commutative = mask.OverlapsRay(endX, endY, startX, startY);
 
+            commutative.Should().BeEquivalentTo(overlaps);
             overlaps.Should().BeNull();
         }
 
@@ -108,8 +110,28 @@ namespace Bitmask.Test
             var mask = new Mask(160, 160);
 
             var overlaps = mask.OverlapsRay(startX, startY, endX, endY);
+            var commutative = mask.OverlapsRay(endX, endY, startX, startY);
 
+            commutative.Should().BeEquivalentTo(overlaps);
             overlaps.Should().BeNull();
+        }
+
+        [Theory]
+        [InlineData(200, 0, 0, 0, 174, 0)]
+        [InlineData(0, 0, 200, 0, 74, 0)]
+        public void HorizonatalRayIntersectsStructureInMask(int startX, int startY, int endX, int endY, int expectedX, int expectedY)
+        {
+            var mask = new Mask(200, 1);
+            for (int x = 0; x < 200; x++)
+            {
+                if ((x >=74 && x <= 138) || (x >= 152 && x <= 174)){
+                    mask.SetAt(x, 0);
+                }
+            }
+
+            var overlaps = mask.OverlapsRay(startX, startY, endX, endY);
+
+            overlaps.Should().BeEquivalentTo(new Tuple<int, int>(expectedX, expectedY));
         }
 
         private static Mask BoxMask(int width, int height)
