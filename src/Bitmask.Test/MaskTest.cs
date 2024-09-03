@@ -9,6 +9,52 @@ namespace Bitmask.Test
         private const int HEIGHT = 16;
 
         [Theory]
+        [InlineData(-1, 0)]
+        [InlineData(0, -1)]
+        [InlineData(WIDTH, 0)]
+        [InlineData(0, HEIGHT)]
+        [InlineData(WIDTH + 1000, HEIGHT + 1000)]
+        public void MaskIsNotSetOutsideShape(int x, int y)
+        {
+            var mask = new Mask(WIDTH, HEIGHT);
+            mask.Fill();
+
+            var isSet = mask.IsSet(x, y);
+
+            isSet.Should().BeFalse();
+        }
+
+        [Fact]
+        public void EmptyMaskIsNotSetAnywhere()
+        {
+            var mask = new Mask(WIDTH, HEIGHT);
+            var isSet = false;
+
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    isSet |= mask.IsSet(x, y);
+                }
+            }
+
+            isSet.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(WIDTH - 1, HEIGHT - 1)]
+        public void MaskIsSet(int x, int y)
+        {
+            var mask = new Mask(WIDTH, HEIGHT);
+            mask.SetAt(x, y);
+
+            var isSet = mask.IsSet(x, y);
+
+            isSet.Should().BeTrue();
+        }
+
+        [Theory]
         [InlineData(-WIDTH, 0)]
         [InlineData(0, -HEIGHT)]
         [InlineData(WIDTH, 0)]

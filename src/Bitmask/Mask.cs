@@ -79,6 +79,15 @@ namespace Bitmask
             return false;
         }
 
+        public bool IsSet(int x, int y)
+        {
+            if (x < 0 || x >= W || y < 0 || y >= H)
+            {
+                return false;
+            }
+            return GetAt(x, y);
+        }
+
         internal bool GetAt(int x, int y)
         {
             return (Bits[x / BITS_PER_STRIP * H + y] & (1uL << (int)((ulong)x & BLOCK_MODULO))) != 0;
